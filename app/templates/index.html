@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargorex - Prototipo de Horas de Investigacion</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>Cargorex</h1>
+    <p class="subtitle">Prototipo - Validacion de asignacion de horas de investigacion</p>
+  </header>
+
+  <div class="notice" role="note">
+    ⚠️ Datos ficticios de demostracion. No representan informacion oficial de la ESPE.
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Registrar asignacion</h2>
+      <form id="assignment-form">
+        <label for="teacher">Docente</label>
+        <select id="teacher" name="teacher_id" required></select>
+
+        <label for="project">Proyecto de investigacion</label>
+        <select id="project" name="project_id" required></select>
+
+        <p class="status-line">
+          Estado del proyecto: <strong id="project-status">-</strong>
+        </p>
+
+        <label for="hours">Horas de investigacion (entero &gt; 0)</label>
+        <input type="number" id="hours" name="hours" min="1" step="1" required />
+
+        <button type="submit">Registrar</button>
+      </form>
+
+      <div id="message" class="message" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>Asignaciones registradas</h2>
+      <table id="assignments-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Docente</th>
+            <th>Proyecto</th>
+            <th>Horas</th>
+            <th>Registrado</th>
+          </tr>
+        </thead>
+        <tbody id="assignments-body">
+          <tr><td colspan="5" class="empty">Sin registros.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

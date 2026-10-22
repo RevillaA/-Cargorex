@@ -1,0 +1,207 @@
+openapi: 3.0.3
+info:
+  title: Cargorex - API Prototipo de Validación de Horas de Investigación
+  version: 0.1.0
+  description: >
+    Contrato de la API del prototipo (iteración 1). Datos ficticios de prueba.
+    La validación de reglas de negocio ocurre en el servidor (Principio IV de la
+    constitución). Rechazos: HTTP 422 para entrada inválida (forma), HTTP 400
+    para regla de negocio incumplida. No representa una API institucional real.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Servidor local de desarrollo
+
+paths:
+  /:
+    get:
+      summary: Página del prototipo (formulario y tabla)
+      description: Devuelve la vista HTML (Jinja2) con el aviso de datos ficticios. (RF, US1/US2/US3)
+      tags: [pages]
+      responses:
+        "200":
+          description: Página HTML del prototipo
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/teachers:
+    get:
+      summary: Listar docentes de prueba
+      description: Catálogo ficticio de docentes. (RF-01)
+      tags: [catalog]
+      responses:
+        "200":
+          description: Lista de docentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Teacher"
+
+  /api/projects:
+    get:
+      summary: Listar proyectos de prueba
+      description: Catálogo ficticio de proyectos con su estado. (RF-02, RF-03)
+      tags: [catalog]
+      responses:
+        "200":
+          description: Lista de proyectos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchProject"
+
+  /api/assignments:
+    get:
+      summary: Consultar asignaciones registradas
+      description: Devuelve las asignaciones válidas almacenadas. (RF-10, CA-06)
+      tags: [assignments]
+      responses:
+        "200":
+          description: Lista de asignaciones (puede estar vacía)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchAssignment"
+    post:
+      summary: Registrar una asignación de horas
+      description: >
+        Valida en el servidor y persiste solo si el docente y el proyecto existen,
+        el proyecto está APPROVED y las horas son un entero > 0. (RF-04..RF-09, RF-11, CA-01..CA-07)
+      tags: [assignments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentCreate"
+      responses:
+        "201":
+          description: Asignación creada (proyecto aprobado y horas válidas). (CA-01)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchAssignment"
+        "400":
+          description: >
+            Rechazo por regla de negocio: docente inexistente, proyecto inexistente
+            o proyecto no aprobado (PENDING/REJECTED). No se persiste nada.
+            (RF-05, RF-06, RF-07, RF-11, CA-02, CA-03, CA-05, CA-07)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessError"
+        "422":
+          description: >
+            Rechazo por entrada inválida: horas <= 0, no enteras, no numéricas,
+            o campos faltantes. No se persiste nada. (RF-08, CA-04, CA-07)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+components:
+  schemas:
+    Teacher:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Docente de Prueba 1"
+      required: [id, name]
+
+    ProjectStatus:
+      type: string
+      enum: [APPROVED, PENDING, REJECTED]
+
+    ResearchProject:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        code:
+          type: string
+          example: "PI-001"
+        name:
+          type: string
+          example: "Proyecto de Investigación de Prueba (Aprobado)"
+        status:
+          $ref: "#/components/schemas/ProjectStatus"
+      required: [id, code, name, status]
+
+    AssignmentCreate:
+      type: object
+      properties:
+        teacher_id:
+          type: integer
+          minimum: 1
+          example: 1
+        project_id:
+          type: integer
+          minimum: 1
+          example: 1
+        hours:
+          type: integer
+          exclusiveMinimum: 0
+          description: Entero estrictamente positivo. Sin límite máximo (PENDIENTE DE VALIDACIÓN).
+          example: 8
+      required: [teacher_id, project_id, hours]
+
+    ResearchAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        teacher_id:
+          type: integer
+          example: 1
+        project_id:
+          type: integer
+          example: 1
+        hours:
+          type: integer
+          example: 8
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-10-21T15:30:00Z"
+      required: [id, teacher_id, project_id, hours, created_at]
+
+    BusinessError:
+      type: object
+      description: Error de regla de negocio (HTTP 400).
+      properties:
+        detail:
+          type: string
+          example: "El proyecto seleccionado no está aprobado (estado: PENDING)."
+      required: [detail]
+
+    ValidationError:
+      type: object
+      description: Error de validación de entrada (HTTP 422, formato nativo de FastAPI).
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+              msg:
+                type: string
+              type:
+                type: string
+      required: [detail]

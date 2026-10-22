@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Base de datos local (datos de demostración)
+*.db
+
+# Entorno / IDE
+.env
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
